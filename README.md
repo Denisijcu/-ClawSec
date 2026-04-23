@@ -1,5 +1,9 @@
 # 🦞 ClawSec
 
+[![tests](https://github.com/Denisijcu/clawsec/actions/workflows/tests.yml/badge.svg)](https://github.com/Denisijcu/clawsec/actions/workflows/tests.yml)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
+
 **Offensive recon assistant for OpenClaw.**
 Built by [Vertex Coders LLC](https://github.com/vertex-coders) for the
 DEV Community **OpenClaw Challenge 2026**.

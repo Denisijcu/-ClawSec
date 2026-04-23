@@ -1,0 +1,58 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install system deps (nmap, whois)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq nmap whois
+
+      - name: Syntax check
+        run: |
+          python -m py_compile recon.py scope_guard.py
+          bash -n setup_vm.sh
+
+      - name: Run scope_guard tests
+        run: python tests/test_scope_guard.py -v
+
+      - name: Run risk_level tests
+        run: python tests/test_risk.py -v
+
+      - name: Scope guard CLI smoke test
+        run: |
+          # Public target must be ALLOWED
+          test "$(python scope_guard.py 8.8.8.8)" = "ALLOWED"
+          # Private target must be BLOCKED
+          test "$(python scope_guard.py 192.168.1.1 || true)" = "BLOCKED"
+          # HTB only opens with --allow-lab
+          test "$(python scope_guard.py 10.10.11.42 || true)" = "BLOCKED"
+          test "$(python scope_guard.py --allow-lab 10.10.11.42)" = "ALLOWED"
+          # Metadata endpoint stays blocked even with --allow-lab
+          test "$(python scope_guard.py --allow-lab 169.254.169.254 || true)" = "BLOCKED"
+          echo "Scope guard CLI behavior OK"
