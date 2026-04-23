@@ -8,6 +8,7 @@ Outputs structured JSON to /tmp/clawsec_results.json
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 import socket
@@ -211,10 +212,72 @@ def run_whois(target: str) -> dict:
 
 # ── Subdomain enumeration ─────────────────────────────────────────────────────
 
-def run_subdomain_enum(target: str, wordlist_path: str | None = None) -> dict:
+def _resolve(fqdn: str) -> str | None:
+    try:
+        return socket.gethostbyname(fqdn)
+    except socket.gaierror:
+        return None
+
+
+def _subdomain_enum_subfinder(target: str, timeout: int = 120) -> list[str] | None:
+    """Run subfinder if available. Returns a list of FQDNs or None if tool missing."""
+    if not shutil.which("subfinder"):
+        return None
+    print(f"[recon]   using subfinder", file=sys.stderr)
+    stdout, _stderr, rc = run_cmd(
+        ["subfinder", "-d", target, "-silent", "-timeout", "20"],
+        timeout=timeout,
+    )
+    if rc != 0:
+        return []
+    return [line.strip() for line in stdout.splitlines() if line.strip()]
+
+
+def _subdomain_enum_amass(target: str, timeout: int = 120) -> list[str] | None:
+    """Run `amass enum -passive` if available."""
+    if not shutil.which("amass"):
+        return None
+    print(f"[recon]   using amass (passive)", file=sys.stderr)
+    stdout, _stderr, rc = run_cmd(
+        ["amass", "enum", "-passive", "-d", target, "-timeout", "2"],
+        timeout=timeout,
+    )
+    if rc != 0:
+        return []
+    return [line.strip() for line in stdout.splitlines() if line.strip()]
+
+
+def _subdomain_enum_wordlist(target: str, wordlist_path: str | None) -> tuple[list[str], int]:
+    """DNS bruteforce using bundled or user-provided wordlist.
+    Returns (found_fqdns, wordlist_size)."""
+    words = DEFAULT_SUB_WORDLIST
+    if wordlist_path:
+        try:
+            with open(wordlist_path, "r", encoding="utf-8", errors="ignore") as f:
+                words = [w.strip() for w in f if w.strip() and not w.startswith("#")]
+            print(f"[recon]   loaded {len(words)} words from {wordlist_path}", file=sys.stderr)
+        except OSError as e:
+            print(f"[recon]   wordlist read failed ({e}); using default", file=sys.stderr)
+
+    found: list[str] = []
+    for sub in words:
+        fqdn = f"{sub}.{target}"
+        if _resolve(fqdn):
+            found.append(fqdn)
+    return found, len(words)
+
+
+def run_subdomain_enum(target: str, wordlist_path: str | None = None,
+                       prefer: str = "auto") -> dict:
     """
-    Basic subdomain enumeration using DNS bruteforce.
-    Uses DEFAULT_SUB_WORDLIST unless --wordlist provided.
+    Subdomain enumeration with graceful tool fallback.
+
+    Order when prefer == "auto":
+        1. subfinder   (passive, fast, comprehensive if installed)
+        2. amass       (passive, broad if installed)
+        3. wordlist    (always available)
+
+    prefer can be "auto", "subfinder", "amass", or "wordlist" to force a method.
     """
     # Only run against domains, not IPs
     try:
@@ -223,31 +286,47 @@ def run_subdomain_enum(target: str, wordlist_path: str | None = None) -> dict:
     except socket.error:
         pass
 
-    words = DEFAULT_SUB_WORDLIST
-    if wordlist_path:
-        try:
-            with open(wordlist_path, "r", encoding="utf-8", errors="ignore") as f:
-                words = [w.strip() for w in f if w.strip() and not w.startswith("#")]
-            print(f"[recon] Loaded {len(words)} words from {wordlist_path}", file=sys.stderr)
-        except OSError as e:
-            print(f"[recon] wordlist read failed ({e}); using default", file=sys.stderr)
+    print(f"[recon] Running subdomain enum on {target} (method={prefer})", file=sys.stderr)
 
-    print(f"[recon] Running subdomain enum on {target} ({len(words)} words)", file=sys.stderr)
+    discovered: list[str] = []
+    method_used: str = ""
+    wordlist_size = 0
 
-    found = []
-    for sub in words:
-        fqdn = f"{sub}.{target}"
-        try:
-            ip = socket.gethostbyname(fqdn)
-            found.append({"subdomain": fqdn, "ip": ip})
+    if prefer in ("auto", "subfinder"):
+        res = _subdomain_enum_subfinder(target)
+        if res is not None:
+            discovered = res
+            method_used = "subfinder"
+
+    if not method_used and prefer in ("auto", "amass"):
+        res = _subdomain_enum_amass(target)
+        if res is not None:
+            discovered = res
+            method_used = "amass"
+
+    if not method_used or prefer == "wordlist":
+        wl_found, wordlist_size = _subdomain_enum_wordlist(target, wordlist_path)
+        if not method_used:
+            discovered = wl_found
+            method_used = "wordlist"
+        else:
+            # Merge wordlist hits with tool hits if user forced wordlist too
+            discovered = sorted(set(discovered) | set(wl_found))
+
+    # Resolve every FQDN we discovered (tools may return unresolvable historical data)
+    resolved = []
+    for fqdn in sorted(set(discovered)):
+        ip = _resolve(fqdn)
+        if ip:
+            resolved.append({"subdomain": fqdn, "ip": ip})
             print(f"[recon]   Found: {fqdn} → {ip}", file=sys.stderr)
-        except socket.gaierror:
-            pass
 
     return {
-        "found": found,
-        "count": len(found),
-        "wordlist_size": len(words),
+        "method": method_used,
+        "found": resolved,
+        "count": len(resolved),
+        "wordlist_size": wordlist_size,
+        "candidates_total": len(set(discovered)),
     }
 
 
@@ -316,6 +395,11 @@ def main():
         help="Custom subdomain wordlist (one per line)"
     )
     parser.add_argument(
+        "--sub-method", default="auto",
+        choices=["auto", "subfinder", "amass", "wordlist"],
+        help="Subdomain enum method (default: auto — prefer subfinder > amass > wordlist)"
+    )
+    parser.add_argument(
         "--output", default=str(OUTPUT_FILE),
         help=f"Output JSON path (default: {OUTPUT_FILE})"
     )
@@ -352,7 +436,9 @@ def main():
         results["whois"] = run_whois(args.target)
 
     if "subdomains" in modules:
-        results["subdomains"] = run_subdomain_enum(args.target, args.wordlist)
+        results["subdomains"] = run_subdomain_enum(
+            args.target, args.wordlist, prefer=args.sub_method
+        )
 
     out_path.write_text(json.dumps(results, indent=2))
     print(f"[recon] Results saved to {out_path}", file=sys.stderr)
