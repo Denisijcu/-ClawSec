@@ -30,8 +30,10 @@ all without leaving the chat.
 - 📇 **WHOIS with TLD fallback** — retries with the authoritative registrar
   server when the default whois query returns malformed data (fixes `.org`,
   `.io`, `.dev`, `.ai`, etc.)
-- 🌐 **Subdomain bruteforce** — default 34-word list, or point it at your own
-  wordlist with `--wordlist path/to/list.txt`
+- 🌐 **Subdomain enumeration** — auto-detects `subfinder` or `amass` when
+  installed; otherwise falls back to bundled DNS bruteforce (34-word
+  quick list, 200+ bundled under `wordlists/`, or bring your own with
+  `--wordlist`)
 - 🎯 **Version-aware risk scoring** — flags known-bad releases (OpenSSH ≤6.6,
   Apache ≤2.4.29, PHP 5.x, vsftpd 2.3.4 backdoor, Samba 3.x, …) as **Critical**
   with a human-readable reason
@@ -180,6 +182,9 @@ to your chat channel.
 | `setup_vm.sh` | One-shot installer for Kali / Debian / Ubuntu |
 | `tests/test_scope_guard.py` | 19 unit tests for scope validation |
 | `tests/test_risk.py` | 11 unit tests for version-based risk scoring |
+| `wordlists/subdomains-top200.txt` | Bundled 200+ common-subdomain list |
+| `.github/workflows/tests.yml` | CI on Python 3.11 / 3.12 / 3.13 |
+| `CHANGELOG.md` | Release notes |
 | `LICENSE` | MIT |
 
 ---
@@ -238,6 +243,29 @@ python3 scope_guard.py --allowlist ~/.clawsec/allowlist.txt 192.168.50.10
 
 Metadata endpoints and loopback cannot be allowlisted — those are hardcoded
 as always-blocked.
+
+---
+
+## 🔍 Subdomain enumeration methods
+
+ClawSec auto-picks the best available method:
+
+| Preference | Tool / source             | When used                  |
+|-----------:|---------------------------|----------------------------|
+| 1          | [`subfinder`](https://github.com/projectdiscovery/subfinder) (passive) | If installed on `$PATH`. Fast + broad. |
+| 2          | [`amass enum -passive`](https://github.com/owasp-amass/amass) | If installed and subfinder is not. |
+| 3          | Built-in DNS bruteforce   | Always available. Uses either the 34-word default or `wordlists/subdomains-top200.txt`. |
+
+Force a specific method with `--sub-method`:
+
+```bash
+python3 recon.py --target example.com --modules subdomains --sub-method subfinder
+python3 recon.py --target example.com --modules subdomains --sub-method wordlist \
+    --wordlist wordlists/subdomains-top200.txt
+```
+
+Every discovered FQDN is DNS-resolved; stale / historical results without a
+current A record are dropped.
 
 ---
 
