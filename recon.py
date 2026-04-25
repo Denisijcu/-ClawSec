@@ -14,8 +14,44 @@ import sys
 import socket
 import datetime
 import re
+import urllib.request
+import urllib.error
 import xml.etree.ElementTree as ET
 from pathlib import Path
+
+# ── VIC Bridge config ─────────────────────────────────────────────────────────
+VIC_BRIDGE_URL = "http://localhost:5100/vic/ingest"
+VIC_BRIDGE_TIMEOUT = 30  # Claude tarda ~5-15s, dejamos margen
+
+
+def send_to_vic_bridge(results: dict) -> str | None:
+    """POST results al VIC Bridge. Devuelve insight de Claude o None si offline.
+    Non-blocking: si VIC no responde a tiempo, recon continúa."""
+    try:
+        payload = json.dumps(results).encode()
+        req = urllib.request.Request(
+            VIC_BRIDGE_URL,
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=VIC_BRIDGE_TIMEOUT) as resp:
+            data = json.loads(resp.read())
+            insight = data.get("vic_insight", "")
+            print(
+                f"[recon] ✅ VIC Bridge ingested data for {data.get('target')}",
+                file=sys.stderr,
+            )
+            return insight
+    except urllib.error.URLError:
+        print(
+            "[recon] ⚠️  VIC Bridge offline (localhost:5100) — skipping insight",
+            file=sys.stderr,
+        )
+        return None
+    except Exception as e:
+        print(f"[recon] ⚠️  VIC Bridge error: {e}", file=sys.stderr)
+        return None
 
 OUTPUT_FILE = Path("/tmp/clawsec_results.json")
 
@@ -403,6 +439,10 @@ def main():
         "--output", default=str(OUTPUT_FILE),
         help=f"Output JSON path (default: {OUTPUT_FILE})"
     )
+    parser.add_argument(
+        "--no-vic", action="store_true",
+        help="Skip VIC Bridge call (don't query Claude for insight)"
+    )
     args = parser.parse_args()
 
     out_path = Path(args.output)
@@ -447,10 +487,20 @@ def main():
     sub_count = results["subdomains"].get("count", 0)
     crit_count = sum(1 for p in results["nmap"].get("ports", []) if p.get("risk") == "Critical")
     high_count = sum(1 for p in results["nmap"].get("ports", []) if p.get("risk") == "High")
+
+    # ── VIC Bridge hook (non-blocking) ────────────────────────────────────────
+    if not getattr(args, "no_vic", False):
+        vic_insight = send_to_vic_bridge(results)
+        if vic_insight:
+            results["vic_insight"] = vic_insight
+            out_path.write_text(json.dumps(results, indent=2))  # rewrite con insight
+
     print(
         f"DONE | ports={port_count} | critical={crit_count} | high={high_count} | "
         f"subdomains={sub_count} | output={out_path}"
     )
+    if results.get("vic_insight"):
+        print(f"VIC_INSIGHT | {results['vic_insight'][:140]}...")
 
 
 if __name__ == "__main__":

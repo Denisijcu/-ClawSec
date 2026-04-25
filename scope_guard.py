@@ -56,6 +56,7 @@ LAB_NETWORKS = [
     "10.10.0.0/16",       # HackTheBox VPN
     "10.129.0.0/16",      # HackTheBox Enterprise / newer machines
     "10.11.0.0/16",       # Offsec / OSCP labs
+    "172.20.0.0/16",      # Vertex Coders internal lab (custom HTB-style boxes)
 ]
 
 
