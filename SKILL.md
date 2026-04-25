@@ -198,7 +198,7 @@ Current engine version: **0.2.0**
 
 
 ---
-name: clawsec2
+name: clawsec
 description: >
   Offensive reconnaissance and web discovery assistant for authorized security assessments.
   Use when the user asks to scan, recon, enumerate, fuzz, discover directories, or assess
