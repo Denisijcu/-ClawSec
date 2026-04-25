@@ -212,7 +212,6 @@ metadata:
         kind: apt
         packages: ["nmap", "python3", "feroxbuster", "whois", "seclists"]
         label: "Install Vertex Recon Stack (Apt)"
-
 ---
 
 # ClawSec v2.0 — Offensive Recon + Smart Web Discovery
