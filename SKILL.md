@@ -1,36 +1,27 @@
 ---
 name: clawsec
-description: "Assists in offensive reconnaissance and web discovery for authorized security assessments. Automatically identifies services, evaluates risk, and performs directory fuzzing on web targets."
-triggers:
-  - scan
-  - recon
-  - enumerate
-  - nmap
-  - fuzz
-  - feroxbuster
-  - htb
-  - ctf
-  - "what do you find on"
+description: >
+  Offensive reconnaissance assistant for authorized security assessments.
+  Use when the user asks to scan, recon, enumerate, or assess a target host or domain.
+  Triggers on: 'scan', 'recon', 'enumerate', 'nmap', 'ports', 'subdomains', 'whois',
+  'attack surface', 'pentest', 'hackthebox', 'ctf target'.
+  NOT for: general web browsing, coding help, or any target the user has not explicitly
+  authorized in writing.
 metadata:
-  openclaw: true
-emoji: "🦞🔍"
-version: "2.0.0"
-requires:
-  bins:
-    - python3
-    - nmap
-    - feroxbuster
-    - whois
-install:
-  - id: apt
-    kind: apt
-    packages:
-      - nmap
-      - python3
-      - feroxbuster
-      - whois
-      - seclists
-    label: "Install Vertex Recon Stack (Apt)"
+  openclaw:
+    emoji: "🦞🔍"
+    requires:
+      bins:
+        - python3
+        - nmap
+    install:
+      - id: apt
+        kind: apt
+        packages:
+          - nmap
+          - python3
+          - python3-pip
+        label: "Install nmap + python3 (apt)"
 ---
 
 # ClawSec — Offensive Recon Skill
