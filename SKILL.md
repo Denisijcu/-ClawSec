@@ -1,5 +1,7 @@
 # name: clawsec
-description: >
+
+---
+# description: 
   Offensive reconnaissance assistant for authorized security assessments.
   Use when the user asks to scan, recon, enumerate, or assess a target host or domain.
   Triggers on: 'scan', 'recon', 'enumerate', 'nmap', 'ports', 'subdomains', 'whois',
