@@ -189,7 +189,99 @@ to `scope_guard.py`.
 | `scope_guard.py` | Target validation (RFC1918, metadata, allowlist, `--allow-lab`) |
 | `recon.py` | nmap (XML parsed) + whois (TLD fallback) + subdomain enumeration |
 | `tests/test_scope_guard.py` | 19 unit tests for scope validation |
+
+
 | `tests/test_risk.py` | 11 unit tests for version-based risk scoring |
 | `setup_vm.sh` | One-shot installer for Kali / Debian / Ubuntu |
 
 Current engine version: **0.2.0**
+
+---
+name: clawsec
+description: >
+  Offensive reconnaissance and web discovery assistant for authorized security assessments.
+  Use when the user asks to scan, recon, enumerate, fuzz, discover directories, or assess
+  a target host or domain.
+  Triggers on: 'scan', 'recon', 'enumerate', 'nmap', 'ports', 'subdomains', 'whois',
+  'fuzz', 'feroxbuster', 'ffuf', 'directories', 'web discovery', 'attack surface',
+  'pentest', 'hackthebox', 'htb', 'ctf', 'what do you find on'.
+  NOT for: general web browsing, coding help, or any target the user has not explicitly
+  authorized in writing.
+metadata:
+  openclaw:
+    emoji: "🦞🔍"
+    requires:
+      bins:
+        - python3
+        - nmap
+        - feroxbuster
+    install:
+      - id: apt
+        kind: apt
+        packages:
+          - nmap
+          - python3
+          - feroxbuster
+          - whois
+          - seclists
+        label: "Install recon tools (apt)"
+---
+
+# ClawSec v2.0 — Offensive Recon + Smart Web Discovery
+
+Built by Vertex Coders LLC.
+
+**IMPORTANT — Authorized use only.**
+
+---
+
+## Workflow
+
+### Phase 1 — Recon
+
+**Step 1 — Parse request**
+Extract: target, scan_type (quick/full/stealth), modules, lab_mode (HTB/CTF)
+
+**Step 2 — Scope validation**
+```bash
+python3 ~/.openclaw/skills/clawsec/scope_guard.py <target>
+# HTB ranges:
+python3 ~/.openclaw/skills/clawsec/scope_guard.py --allow-lab <target>
+```
+BLOCKED → stop. ALLOWED → proceed.
+
+**Step 3 — Recon**
+```bash
+python3 ~/.openclaw/skills/clawsec/recon.py --target <target> --scan <scan_type> --modules <modules>
+```
+
+### Phase 2 — Smart Web Discovery (auto-triggered on HTTP ports)
+
+**Step 4 — Web discovery**
+```bash
+python3 ~/.openclaw/skills/clawsec/web_discovery.py \
+  --target <target> \
+  --nmap-json /tmp/clawsec_results.json
+```
+
+**Step 5 — Combined report to channel**
+```
+🦞 ClawSec v2.0 Report | Vertex Coders LLC
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Target: <target> | <timestamp>
+📋 RECON: <ports summary>
+🔓 PORTS: <port table>
+📂 WEB DISCOVERY: <stack + paths>
+🎯 VERTEX INTELLIGENCE: <LLM next step>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ Authorized use only | github.com/Denisijcu/clawsec
+```
+
+## Slash commands
+```
+/clawsec <target>              # quick scan + web discovery
+/clawsec <target> full         # all ports
+/clawsec <target> --htb        # HTB lab mode
+/clawsec <target> --no-web     # skip web discovery
+/discover <target> [port]      # web discovery only
+```
