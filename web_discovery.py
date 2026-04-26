@@ -177,7 +177,7 @@ def run_feroxbuster(target: str, port: int, wordlist: str, stack: str) -> dict:
         "--wordlist", wordlist,
         "--status-codes", "200,201,204,301,302,307,401,403,500",
         "--output", output_file, "--json", "--no-state", "--silent",
-        "--threads", "30", "--timeout", "7", "--extract-links",
+        "--threads", "30", "--timeout", "7", "--extract-links","--depth", "1",
         "--extensions", exts,
     ]
     print(f"[web_discovery] Fuzzing {url} [{stack}] ext={exts}", file=sys.stderr)
