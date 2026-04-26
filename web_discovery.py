@@ -40,19 +40,19 @@ ANTHROPIC_MODEL   = "claude-sonnet-4-6"  # Sonnet es más barato que Opus
 
 # ── Wordlists ─────────────────────────────────────────────────────────────────
 WORDLISTS = {
-    "flask":     "/usr/share/wordlists/dirb/common.txt",
-    "django":    "/usr/share/wordlists/dirb/common.txt",
-    "express":   "/usr/share/wordlists/dirb/common.txt",
-    "rails":     "/usr/share/wordlists/dirb/common.txt",
-    "iis":       "/usr/share/seclists/Discovery/Web-Content/IIS.fuzz.txt",
-    "aspnet":    "/usr/share/seclists/Discovery/Web-Content/IIS.fuzz.txt",
+    "flask":     "/usr/share/seclists/Discovery/Web-Content/common.txt",
+    "django":    "/usr/share/seclists/Discovery/Web-Content/common.txt",
+    "express":   "/usr/share/seclists/Discovery/Web-Content/common.txt",
+    "rails":     "/usr/share/seclists/Discovery/Web-Content/common.txt",
+    "iis":       "/usr/share/seclists/Discovery/Web-Content/raft-medium-directories-lowercase.txt",
+    "aspnet":    "/usr/share/seclists/Discovery/Web-Content/raft-medium-directories-lowercase.txt",
     "apache":    "/usr/share/seclists/Discovery/Web-Content/raft-medium-directories-lowercase.txt",
     "nginx":     "/usr/share/seclists/Discovery/Web-Content/raft-medium-directories-lowercase.txt",
-    "tomcat":    "/usr/share/seclists/Discovery/Web-Content/tomcat.txt",
+    "tomcat":    "/usr/share/seclists/Discovery/Web-Content/raft-medium-directories-lowercase.txt",
     "wordpress": "/usr/share/seclists/Discovery/Web-Content/CMS/WordPress/wp-plugins.fuzz.txt",
-    "unknown":   "/usr/share/wordlists/dirb/common.txt",
+    "unknown":   "/usr/share/seclists/Discovery/Web-Content/common.txt",
 }
-WORDLIST_FALLBACK = "/usr/share/wordlists/dirb/common.txt"
+WORDLIST_FALLBACK = "/usr/share/seclists/Discovery/Web-Content/common.txt"
 
 # ── Stack signatures ──────────────────────────────────────────────────────────
 STACK_SIGNATURES = {
