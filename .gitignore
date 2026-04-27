@@ -1,8 +1,86 @@
+# ── ClawSec .gitignore ───────────────────────────────────────────────────────
+# Vertex Coders LLC
+
+# ── Sensitive data we never want in the repo ─────────────────────────────────
+# Credentials / passwords / tokens (HTB box artifacts, local tests, etc.)
+pass.txt
+passwords.txt
+users.txt
+*.token
+*.tokens
+wsus_token.txt
+*token.txt
+*.creds
+credentials.txt
+
+# Loot / hashes captured during testing
+loot/
+hashes/
+*.hash
+*.lst
+
+# AD / Windows artifacts pulled from compromised hosts
+GptTmpl.inf
+Registry.pol
+*_Trace_*.log
+*.evtx
+*.dit
+
+# ── Tool outputs / scratch files ─────────────────────────────────────────────
+*.state            # feroxbuster state files
+ferox-*
+nmap-*.{xml,nmap,gnmap}
+gobuster-*.txt
+nikto-*.{txt,html}
+nuclei-*.txt
+resultado.xml
+*.pcap
+*.cap
+
+# ── Logs from local runs / heartbeats ────────────────────────────────────────
+*.log
+Audit_*.log
+Service_*.log
+TaskMonitor.log
+
+# ── Misc binary blobs that shouldn't be here ─────────────────────────────────
+# ad-hoc throwaway scripts (rename them properly if they deserve to be tracked)
+get
+iisstart.png
+script.py
+/test*.py
+/scratch*.py
+
+# ── Local environment / configs ──────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.bak
+*.bak.*
+.local/
+.cache/
+
+# ── Python ───────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .venv/
 venv/
-.pytest_cache/
-/tmp/clawsec_results.json
+env/
+
+# ── IDE ──────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
 .DS_Store
+Thumbs.db
+
+# ── Tests temp / clawsec session data ────────────────────────────────────────
+/tmp/
+clawsec_results.json
+~/.clawsec/

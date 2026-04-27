@@ -49,6 +49,7 @@ STACK_TO_MODULE: dict[str, str | None] = {
     "ldap":     "phase2.modules.ad_enum",
     "kerberos": "phase2.modules.ad_enum",
     "winrm":    "phase2.modules.smb_enum",  # WinRM enum vive en el mismo módulo
+    # ad_enum es activado por ldap o kerberos; smb_enum lo precede para descubrir el dominio.
     "ftp":      None,
     "ssh":      None,
     "rdp":      None,
