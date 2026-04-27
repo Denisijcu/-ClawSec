@@ -222,7 +222,7 @@ metadata:
           - feroxbuster
           - whois
           - seclists
-        label: "Install Vertex Recon Stack (Apt)"
+        label: Install Vertex Recon Stack (apt)
 ---
 
 
