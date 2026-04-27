@@ -195,25 +195,33 @@ to `scope_guard.py`.
 Current engine version: **0.2.0**
 
 
-
-
-
 ---
 name: clawsec
 description: >
-   Assists in offensive reconnaissance and web discovery for authorized security assessments.
-   Automatically identifies services, evaluates risk, and performs directory fuzzing on web targets.
-triggers: ['scan', 'recon', 'enumerate', 'nmap', 'fuzz', 'feroxbuster', 'htb', 'ctf', 'what do you find on']
+  Offensive reconnaissance assistant for authorized security assessments.
+  Automatically identifies services, evaluates risk, and performs directory fuzzing on web targets.
+  Triggers on: 'scan', 'recon', 'enumerate', 'nmap', 'fuzz', 'feroxbuster', 'htb', 'ctf', 'what do you find on'.
+  NOT for: general web browsing, coding help, or any target the user has not explicitly
+  authorized in writing.
 metadata:
   openclaw:
     emoji: "🦞🔍"
-    version: "2.0.0"
     requires:
-      bins: ["python3", "nmap", "feroxbuster", "whois"]
+      bins:
+        - python3
+        - nmap
+        - feroxbuster
+        - whois
     install:
       - id: apt
         kind: apt
-        packages: ["nmap", "python3", "feroxbuster", "whois", "seclists"]
+        packages:
+          - nmap
+          - python3
+          - python3-pip
+          - feroxbuster
+          - whois
+          - seclists
         label: "Install Vertex Recon Stack (Apt)"
 ---
 
