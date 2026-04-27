@@ -194,7 +194,6 @@ to `scope_guard.py`.
 
 Current engine version: **0.2.0**
 
-
 ---
 name: clawsec
 description: >
@@ -222,11 +221,8 @@ metadata:
           - feroxbuster
           - whois
           - seclists
-        label: Install Vertex Recon Stack (apt)
+        label: "Install Vertex Recon Stack (apt)"
 ---
-
-
-
 # ClawSec v2.0 — Offensive Recon + Smart Web Discovery
 
 Built by Vertex Coders LLC.
